@@ -1,3 +1,12 @@
+# This Program is distributed under the terms of the MIT license.
+# Author: Rui Sun
+# Date: 2021-12-12
+# Copyright: Rui Sun from SAA, SJTU
+# Description: Task 1 - Lagrange-Polynomial
+# Environment: Python 3.9.5 64-bit
+#              Numpy 1.20.3
+#              Matplotlib 3.4.2
+
 import numpy as np
 import matplotlib.pyplot as plt
 
