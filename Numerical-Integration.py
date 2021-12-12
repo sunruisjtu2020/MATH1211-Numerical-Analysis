@@ -5,56 +5,87 @@
 # Description: Task 2 - Numerical-Integration
 # Environment: Python 3.9.5 64-bit
 #              Numpy 1.20.3
-#              Matplotlib 3.4.2
 
 import numpy as np
 import matplotlib.pyplot as plt
+from numpy.lib.polynomial import roots
 
 EPS = 1e-7
 MAXSIZE = 200
 
 # Romberg Integration
 # \int_a^b{f(x)}\mathrm{d}x
-# FIXME: Error Results
 def romberg(f, a, b):
-    n = 1
-    I = 0
-    delta = 9999999
-    while delta > EPS:
-        h = (b - a) / n
-        R = np.zeros((n, n))
-        R[0, 0] = (f(a) + f(b)) * h / 2
-        for i in range(1, n):
-            for j in range(i + 1):
-                R[i, j] = R[i - 1, j] + (R[i - 1, j] - R[i - 1, j - 1]) / (4 ** j - 1)
-        delta = np.abs(R[n - 1, n - 1] - R[n - 2, n - 2])
-        I = R[n - 1, n - 1]
-        n += 1
-        if n > MAXSIZE:
-            print("Error: Romberg Integration failed.")
-            return 0
-    return I
+    h = b - a
+    R = np.zeros(MAXSIZE)
+    R[0] = (h / 2) * (f(a) + f(b))
+    for k in range(1, MAXSIZE):
+        h /= 2
+        R[k] = R[k - 1] / 2
+        for j in range(1, 2**(k - 1) + 1):
+            R[k] += h * f(a + (2 * j - 1) * h)
+        if abs(R[k] - R[k - 1]) < EPS:
+            return R[k]
+    print("Error: Romberg Integration failed.")
+    return 0
+
 
 # Gauss-Legendre Integration
 # \int_a^b{f(x)}\mathrm{d}x
-# FIXME: No Results Output
+def legendre(n, x):
+    if n == 0:
+        return 1.0
+    elif n == 1:
+        return x
+    else:
+        return ((2.0 * n - 1.0) * x * legendre(n - 1, x) - (n - 1.0) * legendre(n - 2, x)) / n
+
+def dlegendre(n, x):
+    if n == 0:
+        return 0.0
+    elif n == 1:
+        return 1.0
+    else:
+        return (n / (x**2 - 1.0)) * (x * legendre(n, x) - legendre(n - 1, x))
+
+def legendre_roots(polyorder):
+    if polyorder < 2:
+        print("Error: Polynomial order must be greater than 1.")
+        return None
+    else:
+        roots = []
+        for i in range(1, int(polyorder / 2) + 1):
+            x = np.cos(np.pi * (i - 0.25) / (polyorder + 0.5))
+            error = 10 * EPS**2
+            while error > EPS**2:
+                dx = -legendre(polyorder, x) / dlegendre(polyorder, x)
+                x += dx
+                error = abs(dx)
+            roots.append(x)
+        roots = np.array(roots)
+        if polyorder % 2 == 0:
+            roots = np.concatenate((-roots, roots[::-1]))
+        else:
+            roots = np.concatenate((-roots, [0], roots[::-1]))
+        return roots
+
+def gauss_legendre_weights(polyorder):
+    w = []
+    xs = legendre_roots(polyorder)
+    w = 2.0 / ((1 - xs**2) * dlegendre(polyorder, xs)**2)
+    return w, xs
+
 def gauss_legendre(f, a, b):
-    n = 1
+    delta = 99999
     I = 0
-    delta = 9999999
+    n = 1
     while delta > EPS:
-        h = (b - a) / n
-        x = np.zeros(n)
-        w = np.zeros(n)
-        for i in range(n):
-            x[i] = a + (i + 0.5) * h
-            w[i] = h / 2
-        I_ = 0
-        for i in range(n):
-            I_ += w[i] * f(x[i])
-        delta = np.abs(I - I_)
         n += 1
-        if n > MAXSIZE:
+        w, xs = gauss_legendre_weights(n)
+        I_old = I
+        I = (b - a) / 2 * np.sum(w * f((b - a) / 2 * xs + (b + a) / 2))
+        delta = abs(I - I_old)
+        if n > 1000:
             print("Error: Gauss-Legendre Integration failed.")
             return 0
     return I
