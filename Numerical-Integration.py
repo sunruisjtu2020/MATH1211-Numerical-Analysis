@@ -5,6 +5,7 @@
 # Description: Task 2 - Numerical-Integration
 # Environment: Python 3.9.5 64-bit
 #              Numpy 1.20.3
+#              Matplotlib 3.4.2
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -102,6 +103,9 @@ def fc(x):
 def fd(x):
     return 1 / (1 + x)
 
+def f(x):
+    return np.exp(-x**2)
+
 # main
 print('Romberg Integration')
 print('f(x) = x^2 e^x')
@@ -138,3 +142,14 @@ print('f(x) = 1/(1+x)')
 print('a = 0, b = 1')
 print('I = ', gauss_legendre(fd, 0, 1))
 print('\n')
+
+x = np.linspace(-5, 5, 1000)
+y = f(x)
+plt.title(r'f(x)=e^(-x^2)')
+plt.grid('on')
+plt.plot(x, y)
+
+print('Romberg Integration')
+print(f'I = {romberg(f, -5, 5)}')
+print('Gauss-Legendre Integration')
+print(f'I = {gauss_legendre(f, -5, 5)}')
